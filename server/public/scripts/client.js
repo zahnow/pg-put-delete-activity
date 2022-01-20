@@ -1,3 +1,5 @@
+let editID = undefined;
+
 $(document).ready(function(){
   console.log('jQuery sourced.');
   refreshBooks();
@@ -10,14 +12,20 @@ function addClickHandlers() {
   // TODO - Add code for edit & delete buttons
   $('#bookShelf').on('click', '.delete-button', deleteBook);
   $('#bookShelf').on('click', '.read-button', readBook);
+  $('#bookShelf').on('click', '.edit-button', editBook);
 }
 
 function handleSubmit() {
   console.log('Submit button clicked.');
-  let book = {};
-  book.author = $('#author').val();
-  book.title = $('#title').val();
-  addBook(book);
+  if(!editID) {
+    let book = {};
+    book.author = $('#author').val();
+    book.title = $('#title').val();
+    addBook(book);
+  } else {
+    console.log("Edit mode");
+    updateBook();
+  }
 }
 
 // adds a book to the database
@@ -48,18 +56,49 @@ function deleteBook(event) {
   })
 }
 
+function editBook (event) {
+  const id = $(event.target).data('id');
+  editID = id;
+  console.log(`Editing book at ${id}`);
+  let author = $(event.target).parent().prev().prev().prev().text();
+  let title = $(event.target).parent().prev().prev().prev().prev().text();
+  $('#author').val(author);
+  $('#title').val(title);
+}
+
 function readBook(event) {
   const id = $(event.target).data('id');
   const currentStatus = $(event.target).data('read');
   console.log(`Updating book at ${id}`);
   $.ajax({
     type: "PUT",
-    url: `/books/${id}`,
+    url: `/books/read/${id}`,
     data: {
       currentStatus: currentStatus
     }
   }).then((response) => {
     refreshBooks();
+  }).catch((error) => {
+    console.log('Error updating book:', error);
+  })
+}
+
+function updateBook() {
+  const author = $('#author').val();
+  const title = $('#title').val();
+  const id = editID;
+  $.ajax({
+    type: 'PUT',
+    url: `/books/${id}`,
+    data: {
+      author: author,
+      title: title
+    }
+  }).then((response) => {
+    refreshBooks();
+    $('#author').val('');
+    $('#title').val('');
+    editID = undefined;
   }).catch((error) => {
     console.log('Error updating book:', error);
   })
@@ -88,10 +127,11 @@ function renderBooks(books) {
     // For each book, append a new row to our table
     $('#bookShelf').append(`
       <tr>
-        <td>${book.title}</td>
-        <td>${book.author}</td>
+        <td class="title">${book.title}</td>
+        <td class="author">${book.author}</td>
         <td>${book.isRead}</td>
         <td><button class="read-button" data-read="${book.isRead}" data-id="${book.id}">Mark As Read</button></td>
+        <td><button class="edit-button" data-id="${book.id}">Edit</button></td>
         <td><button class="delete-button" data-id="${book.id}">Delete</button></td>
       </tr>
     `);
