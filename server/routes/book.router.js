@@ -1,4 +1,5 @@
 const express = require('express');
+const { sendStatus } = require('express/lib/response');
 const router = express.Router();
 
 const pool = require('../modules/pool');
@@ -38,11 +39,39 @@ router.post('/',  (req, res) => {
 // Updates a book to show that it has been read
 // Request must include a parameter indicating what book to update - the id
 // Request body must include the content to update - the status
-
+router.put('/:id', (req, res) => {
+  console.log('Updating read status for id:', req.params.id);
+  let newStatus = true;
+  if (req.body.currentStatus === 'true') {
+    newStatus = false;
+  }
+  console.log('Status to update from:', req.body.currentStatus);
+  console.log('New status:', newStatus);
+  const queryText = `UPDATE "books" 
+                     SET "isRead"=$1
+                     WHERE "id"=$2`;
+  pool.query(queryText, [newStatus, req.params.id])
+  .then(response => {
+    res.sendStatus(201);
+  }).catch(error => {
+    res.sendStatus(500);
+  })
+});
 
 // TODO - DELETE 
 // Removes a book to show that it has been read
 // Request must include a parameter indicating what book to update - the id
-
+router.delete('/:id',  (req, res) => {
+  console.log('Deleting book at id:', req.params.id);
+  const queryText = `DELETE FROM "books" WHERE "id"=$1;`;
+  pool.query(queryText, [req.params.id])
+  .then((response) => {
+    res.sendStatus(204);
+  })
+  .catch((error) => {
+    console.log('Error in book /delete', error);
+    res.sendStatus(500);
+  });
+});
 
 module.exports = router;

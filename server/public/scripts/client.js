@@ -8,6 +8,8 @@ function addClickHandlers() {
   $('#submitBtn').on('click', handleSubmit);
 
   // TODO - Add code for edit & delete buttons
+  $('#bookShelf').on('click', '.delete-button', deleteBook);
+  $('#bookShelf').on('click', '.read-button', readBook);
 }
 
 function handleSubmit() {
@@ -31,6 +33,36 @@ function addBook(bookToAdd) {
       console.log('Error in POST', error)
       alert('Unable to add book at this time. Please try again later.');
     });
+}
+
+function deleteBook(event) {
+  const id = $(event.target).data('id');
+  console.log(`Deleting book at ${id}`);
+  $.ajax({
+    type: 'DELETE',
+    url: `/books/${id}`
+  }).then((response) => {
+    refreshBooks();
+  }).catch((error) => {
+    console.log('Error deleting book:', error);
+  })
+}
+
+function readBook(event) {
+  const id = $(event.target).data('id');
+  const currentStatus = $(event.target).data('read');
+  console.log(`Updating book at ${id}`);
+  $.ajax({
+    type: "PUT",
+    url: `/books/${id}`,
+    data: {
+      currentStatus: currentStatus
+    }
+  }).then((response) => {
+    refreshBooks();
+  }).catch((error) => {
+    console.log('Error updating book:', error);
+  })
 }
 
 // refreshBooks will get all books from the server and render to page
@@ -58,6 +90,9 @@ function renderBooks(books) {
       <tr>
         <td>${book.title}</td>
         <td>${book.author}</td>
+        <td>${book.isRead}</td>
+        <td><button class="read-button" data-read="${book.isRead}" data-id="${book.id}">Mark As Read</button></td>
+        <td><button class="delete-button" data-id="${book.id}">Delete</button></td>
       </tr>
     `);
   }
