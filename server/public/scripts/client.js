@@ -1,4 +1,5 @@
 let editID = undefined;
+let sortField = 'author';
 
 $(document).ready(function(){
   console.log('jQuery sourced.');
@@ -23,7 +24,6 @@ function handleSubmit() {
     book.title = $('#title').val();
     addBook(book);
   } else {
-    console.log("Edit mode");
     updateBook();
   }
 }
@@ -64,6 +64,8 @@ function editBook (event) {
   let title = $(event.target).parent().prev().prev().prev().prev().text();
   $('#author').val(author);
   $('#title').val(title);
+
+  $('#add-edit-span').text('Edit')
 }
 
 function readBook(event) {
@@ -98,6 +100,7 @@ function updateBook() {
     refreshBooks();
     $('#author').val('');
     $('#title').val('');
+    $('#add-edit-span').text('Add New');
     editID = undefined;
   }).catch((error) => {
     console.log('Error updating book:', error);
@@ -121,7 +124,6 @@ function refreshBooks() {
 // Displays an array of books to the DOM
 function renderBooks(books) {
   $('#bookShelf').empty();
-
   for(let i = 0; i < books.length; i += 1) {
     let book = books[i];
     // For each book, append a new row to our table
